@@ -3,9 +3,10 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
+var todoDatabase = null;
 angular.module('offline', ['ionic','ngCouchbaseLite'])
+.run(function($ionicPlatform,$couchbase) {
 
-.run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
     if(window.cordova && window.cordova.plugins.Keyboard) {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -20,5 +21,32 @@ angular.module('offline', ['ionic','ngCouchbaseLite'])
     if(window.StatusBar) {
       StatusBar.styleDefault();
     }
+    // coucbase start
+    if(!window.cblite) {
+          alert("Couchbase Lite is not installed!");
+      } else {
+          cblite.getURL(function(err, url) {
+              if(err) {
+                  alert("There was an error getting the database URL");
+                  return;
+              }
+              todoDatabase = new $couchbase(url, "todos");
+
+              todoDatabase.getDatabase().then(function(result) {
+                console.log(result);
+                todoDatabase.listen();
+              }, function(error) {
+                todoDatabase.createDatabase()
+                  .then(function(res){
+                    todoDatabase.listen();
+                  },function(err){
+                    console.log(err);
+                  })
+              });
+
+           });
+       }
+    // coucbase end
   });
+
 })

@@ -4,50 +4,21 @@
 
   function todosController($scope,$rootScope,$q,$http, $ionicPlatform,$couchbase,$ionicPopup) {
     var scope = $scope;
-    var todoDatabase = null;
+    console.log(todoDatabase);
       scope.lists = {};
       scope.url = null;
 
-    $ionicPlatform.ready(function() {
-      if (window.cblite) {
-        window.cblite.getURL(function(err, url) {
-          if (err) {
-            console.log("error launching Couchbase Lite: " + err)
-          } else {
-            console.log("Couchbase Lite running at " + url);
-            scope.url = url;
-            console.log(scope.url);
-            todoDatabase = new $couchbase(url, "todo");
-            todoDatabase.createDatabase().then(function(result) {
-                var todoViews = {
-                    lists: {
-                        map: function(doc) {
-                            if(doc.type == "list" && doc.title) {
-                                emit(doc._id, {title: doc.title, rev: doc._rev})
-                            }
-                        }.toString()
-                    },
-                    tasks: {
-                        map: function(doc) {
-                            if(doc.type == "task" && doc.title && doc.list_id) {
-                                emit(doc.list_id, {title: doc.title, list_id: doc.list_id, rev: doc._rev})
-                            }
-                        }.toString()
-                    }
-                };
-                todoDatabase.createDesignDocument("_design/todo", todoViews);
-                todoDatabase.listen();
-            }, function(error) {
-                console.error(JSON.stringify(error));
+      todoDatabase.getAllDocuments().then(function(result) {
+        console.log("All Docs",result);
+          for(var i = 0; i < result.rows.length; i++) {
+            todoDatabase.getDocument(result.rows[i].id).then(function(result) {
+                    scope.lists[result._id] = result;
             });
-
           }
-        });
-      } else {
-        console.log("error, Couchbase Lite plugin not found.")
-      }
+      }, function(error) {
+          console.log("ERROR QUERYING VIEW -> " + JSON.stringify(error));
+      });
 
-    });
 
     scope.insert = function() {
         $ionicPopup.prompt({
@@ -57,9 +28,7 @@
         .then(function(result) {
             if(result != "") {
                 var obj = {
-                    title: result,
-                    type: "list",
-                    owner: "guest"
+                    task: result
                 };
                 todoDatabase.createDocument(obj).then(function(result) {
                     console.log("Document created!",result);
@@ -70,32 +39,40 @@
         });
     };
 
-    scope.replicate = function(){
-      // todoDatabase.replicate("todo", "http://192.168.43.249:4984/todo", true).then(function(result) {
-      //   console.log(result);
-      //     todoDatabase.replicate("http://192.168.43.249:4984/todo", "todo", true).then(function(result) {
-      //       console.log(result);
-      //     }, function(error) {
-      //         console.error("ERROR -> " + JSON.stringify(error));
-      //     });
+    scope.delete = function(list) {
+      var listId = list._id;
+      todoDatabase.deleteDocument(list._id, list._rev).then(function(result) {
+        console.log(result);
+      }, function(error) {
+          console.log("ERROR -> " + JSON.stringify(error));
+      });
+  };
+
+    scope.replicate = function(ip){
+      console.log(ip);
+      // todoDatabase.replicate("todo", "http://"+ip+":5984/todo", false)
+      //   .then(function(result) {
+      //     todoDatabase.replicate("http://"+ip+":5984/todo", "todo", false)
+      //       .then(function(result) {
+      //         console.log(result);
+      //         }, function(error) {
+      //             console.error("ERROR -> " + JSON.stringify(error));
+      //         });
       // }, function(error) {
       //     console.error("ERROR -> " + JSON.stringify(error));
       // });
-      var deferred = $q.defer();
 
-      $http.post("http://localhost:5984/_replicate",{
-                source: 'todo',
-                target: 'http://192.168.43.249:5984/todo',
-                continuous: true
+      $http.post("http://localhost:4984/_replicate",{
+                source: 'http://'+ip+':4984/todos/',
+                target: 'todos',
+                continuous: false
         })
           .then(function(result) {
             console.log(result);
-              deferred.resolve(result);
           })
           .catch(function(error) {
-              deferred.reject(error);
+            console.log(error);
           });
-      return deferred.promise;
     };
 
     $rootScope.$on("couchbase:change", function(event, args) {
@@ -104,16 +81,12 @@
           if(args.results[i].hasOwnProperty("deleted") && args.results[i].deleted === true) {
               delete $scope.lists[args.results[i].id];
           } else {
-              if(args.results[i].id.indexOf("_design") === -1) {
                   todoDatabase.getDocument(args.results[i].id).then(function(result) {
-                    console.log(result);
-                      if(result.type === "list") {
                           $scope.lists[result._id] = result;
-                      }
                   });
-              }
           }
       }
+      console.log("lists",$scope.lists);
   });
 
 

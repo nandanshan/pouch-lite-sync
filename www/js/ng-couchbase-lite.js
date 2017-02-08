@@ -23,6 +23,16 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
 
     couchbase.prototype = {
 
+	/*
+         * returns the database url
+         *
+         * @param
+         * @return  string
+         */
+        getUrl: function() {
+            return this.databaseUrl;
+        },
+
         /*
          * Create a new database with a name that was passed in from the constructor method
          *
@@ -30,6 +40,7 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @return   promise
          */
         createDatabase: function() {
+
             return this.makeRequest("PUT", this.databaseUrl + this.databaseName);
         },
 
@@ -40,7 +51,7 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @return   promise
          */
         getDatabase: function() {
-            return this.makeRequest("GET", this.databaseUrl + this.databaseName);
+            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/");
         },
 
         /*
@@ -54,7 +65,11 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
             var data = {
                 views: designDocumentViews
             };
-            return this.makeRequest("PUT", this.databaseUrl + this.databaseName + "/" + designDocumentName, {}, data);
+            var designPrefix = "";
+            if(designDocumentName.indexOf("_design/") === -1){
+            	designPrefix = "_design/";
+            }
+            return this.makeRequest("PUT", this.databaseUrl + this.databaseName + "/" + designPrefix + designDocumentName, {}, data);
         },
 
         /*
@@ -64,7 +79,11 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @return   promise
          */
         getDesignDocument: function(designDocumentName) {
-            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/" + designDocumentName);
+            var designPrefix = "";
+            if(designDocumentName.indexOf("_design/") === -1){
+            	designPrefix = "_design/";
+            }
+            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/" + designPrefix + designDocumentName);
         },
 
         /*
@@ -75,8 +94,8 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @param    object options
          * @return   promise
          */
-        queryView: function(designDocumentName, viewName, options) {
-            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/" + designDocumentName + "/_view/" + viewName, options);
+        queryView: function(designDocumentName, options) {
+            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/" + designDocumentName , options);
         },
 
         /*
@@ -87,6 +106,16 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          */
         createDocument: function(jsonDocument) {
             return this.makeRequest("POST", this.databaseUrl + this.databaseName, {}, jsonDocument);
+        },
+
+        /*
+         * Create a new database local document
+         *
+         * @param    string id or empty string for auto generated id, object jsonDocument
+         * @return   promise
+         */
+        createLocalDocument: function(id,jsonDocument) {
+            return this.makeRequest("PUT", this.databaseUrl + this.databaseName + "/_local/" + id, {}, jsonDocument);
         },
 
         /*
@@ -119,7 +148,7 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @return   promise
          */
         getAllDocuments: function() {
-            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/_all_docs");
+            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/_all_docs",{include_docs:true});
         },
 
         /*
@@ -130,6 +159,16 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          */
         getDocument: function(documentId) {
             return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/" + documentId);
+        },
+
+        /*
+         * Get a local document from the database
+         *
+         * @param    string documentId
+         * @return   promise
+         */
+        getLocalDocument: function(documentId) {
+            return this.makeRequest("GET", this.databaseUrl + this.databaseName + "/_local/" + documentId);
         },
 
         /*
@@ -165,36 +204,51 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
         },
 
         /*
+         * retrieve a list of all tasks running on the server
+         *
+         * @param
+         * @return promise
+         */
+        getActiveTasks: function () {
+		return this.makeRequest("GET", this.databaseUrl + "_active_tasks");
+	},
+
+	/*
          * Make a RESTful request to an endpoint while providing parameters or data or both
          *
          * @param    string method
          * @param    string url
          * @param    object params
          * @param    object data
+	 * @param    boolean complete
          * @return   promise
          */
-        makeRequest: function(method, url, params, data) {
-            var deferred = $q.defer();
-            var settings = {
-                method: method,
-                url: url,
-                withCredentials: true
-            };
-            if(params) {
-                settings.params = params;
-            }
-            if(data) {
-                settings.data = data;
-            }
-            $http(settings)
-                .success(function(result) {
-                    deferred.resolve(result);
-                })
-                .error(function(error) {
-                    deferred.reject(error);
-                });
-            return deferred.promise;
-        }
+	makeRequest: function(method, url, params, data,complete) {
+		var deferred = $q.defer();
+		var settings = {
+			method: method,
+			url: url,
+			withCredentials: true
+		};
+		if(params) {
+			settings.params = params;
+		}
+		if(data) {
+			settings.data = data;
+		}
+		if(complete){
+			return $http(settings);
+		}
+		$http(settings)
+			.success(function(result) {
+			deferred.resolve(result);
+		})
+			.error(function(error) {
+			deferred.reject(error);
+		});
+
+		return deferred.promise;
+	}
 
     };
 
