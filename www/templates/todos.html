@@ -1,17 +1,10 @@
 <ion-view>
   <ion-content>
-    <form name="myForm" novalidate>
-
-    <!-- <input type="text" name="dbName" placeholder="Enter Database Name" ng-model="databaseName" required/>
-    <p ng-show="myForm.dbName.$touched && myForm.dbName.$invalid">Name required</p> -->
-    <button class="button button-assertive button-block" ng-click="replicate();">Replicate</button>
-    <button class="button button-positive button-block" ng-click="insert();">Create</button>
-  </form>
-  <ion-list show-delete="false" can-swipe="true">
-      <ion-item ng-repeat="(key, value) in lists" ui-sref="tasks({listId: key})">
-          {{value.title}}
-          <ion-option-button class="button-assertive icon ion-trash-a" ng-click="delete(value)"></ion-option-button>
-      </ion-item>
-  </ion-list>
-    </ion-content>
+ <h3>Top Categories</h3>
+    <div class="list">
+      <div class="item item-icon-right" ng-repeat="category in categories" ui-sref="category({id:category.doc.name})">
+          {{category.doc.displayName}}
+      </div>
+    </div>
+  </ion-content>
 </ion-view>

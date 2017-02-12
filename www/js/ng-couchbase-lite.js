@@ -30,6 +30,7 @@ angular.module("ngCouchbaseLite", []).factory("$couchbase", ["$q", "$http", "$ro
          * @return   promise
          */
         createDatabase: function() {
+            
             return this.makeRequest("PUT", this.databaseUrl + this.databaseName);
         },
 
