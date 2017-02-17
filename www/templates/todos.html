@@ -1,10 +1,17 @@
 <ion-view>
   <ion-content>
  <h3>Top Categories</h3>
-    <div class="list">
-      <div class="item item-icon-right" ng-repeat="category in categories" ui-sref="category({id:category.doc.name})">
-          {{category.doc.displayName}}
-      </div>
-    </div>
+
+	<div class="list card">
+		<div ng-repeat="category in categories" ui-sref="category({id:category.doc.name})">
+			<div class="item">
+				<h2>{{category.doc.displayName}}</h2>
+			</div>
+			<!-- <div class="item item-body">
+				<img src="http://localhost:5984/sk/{{category.doc._id}}/mi-5.jpeg" + >
+			</div> -->
+		</div>
+	</div>
+			
   </ion-content>
 </ion-view>

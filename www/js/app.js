@@ -4,7 +4,7 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 var client = null;
-angular.module('offline', ['ionic','ngCouchbaseLite'])
+angular.module('offline', ['ionic','ionic.native','ngCouchbaseLite'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -58,19 +58,19 @@ angular.module('offline', ['ionic','ngCouchbaseLite'])
                           client.query.put_db_design_ddoc({db: 'sk',ddoc:'category',body:views})
                             .then(function(res){
                               console.log("Design doc created",res) ;
-                              // replicate();
+                              replicate();
                               getChanges(0);
                             },function(err){console.log(err);})
 
                           },function(err){console.log(err);}) 
                       }else{
                        console.log("sk exists");
-                       // replicate();
+                       replicate();
                        getChanges(0);
                       }
 
                       function replicate(){
-                         client.server.post_replicate({db: 'sk', body:{source:"http://192.168.121.88:4984/sk",target:"sk",continuous: true}})
+                         client.server.post_replicate({db: 'sk', body:{source:"http://192.168.121.78:4984/sk",target:"sk",continuous: true}})
                         .then(function(res){
                           console.log("Replicate request sent",res);
                         },function(err){

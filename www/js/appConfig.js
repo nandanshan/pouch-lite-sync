@@ -21,15 +21,6 @@ angular.module('offline')
           id:null
         }
       });
-    // .state("todoLists", {
-    //     url: "/todoLists",
-    //     templateUrl: "templates/todolists.html",
-    //     controller: "TodoListsController"
-    // })
-    // .state("tasks", {
-    //     url: "/tasks/:listId",
-    //     templateUrl: "templates/tasks.html",
-    //     controller: "TaskController"
-    // });
+    
     $urlRouterProvider.otherwise("/home");
   });
