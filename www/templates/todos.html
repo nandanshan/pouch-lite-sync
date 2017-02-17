@@ -1,5 +1,6 @@
 <ion-view>
   <ion-content>
+<<<<<<< HEAD
  <h3>Top Categories</h3>
 
 	<div class="list card">
@@ -14,4 +15,20 @@
 	</div>
 			
   </ion-content>
+=======
+    <form name="myForm" novalidate>
+
+    <input type="text" name="dbName" placeholder="Enter IP address" ng-model="dest" required/>
+<!--     <p ng-show="myForm.dbName.$touched && myForm.dbName.$invalid">Name required</p>
+ -->    <button class="button button-assertive button-block" ng-click="replicate(dest);">Replicate</button>
+    <button class="button button-positive button-block" ng-click="insert();">Create</button>
+  </form>
+  <div class="list">
+      <div class="item item-icon-right" ng-repeat="(key, value) in lists">
+        <i class="assertive icon ion-trash-a" ng-click="delete(value)"></i>
+          {{value.task}}
+      </div>
+  </div>
+    </ion-content>
+>>>>>>> 945644b41147879e05421cf5069db1dc8a2304dc
 </ion-view>
